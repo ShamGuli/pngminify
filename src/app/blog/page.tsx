@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import React from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
@@ -24,6 +25,7 @@ type Post = {
   slug: string;
   excerpt: string | null;
   cover_image: string | null;
+  tags: string[] | null;
   created_at: string | null;
 };
 
@@ -38,7 +40,7 @@ export default async function BlogIndexPage() {
     try {
       const { data, error } = await supabase
         .from("posts")
-        .select("id, title, slug, excerpt, cover_image, created_at")
+        .select("id, title, slug, excerpt, cover_image, tags, created_at")
         .eq("published", true)
         .order("created_at", { ascending: false });
 
@@ -80,6 +82,24 @@ export default async function BlogIndexPage() {
           <p className="mb-6 text-sm text-red-600">{errorMessage}</p>
         )}
 
+        {/* Tag cloud */}
+        {posts.length > 0 && (() => {
+          const allTags = [...new Set(posts.flatMap((p) => p.tags ?? []))].sort();
+          return allTags.length > 0 ? (
+            <div className="mb-6 flex flex-wrap gap-2">
+              {allTags.map((tag) => (
+                <a
+                  key={tag}
+                  href={`/blog/tag/${encodeURIComponent(tag)}`}
+                  className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
+                >
+                  #{tag}
+                </a>
+              ))}
+            </div>
+          ) : null;
+        })()}
+
         {posts.length === 0 ? (
           <p className="text-sm text-slate-500">
             No posts have been published yet. Once you add posts in Supabase,
@@ -89,9 +109,8 @@ export default async function BlogIndexPage() {
           <div className="space-y-6">
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {posts.map((post, index) => (
-                <>
+                <React.Fragment key={post.id}>
                   <Link
-                    key={post.id}
                     href={`/blog/${post.slug}`}
                     className="flex flex-col overflow-hidden rounded-xl bg-white text-sm text-slate-700 shadow-sm shadow-slate-100 transition hover:-translate-y-0.5 hover:shadow-md"
                   >
@@ -129,10 +148,7 @@ export default async function BlogIndexPage() {
                   </Link>
 
                   {(index + 1) % 3 === 0 && index !== posts.length - 1 && (
-                    <div
-                      key={`ad-${post.id}`}
-                      className="sm:col-span-2 lg:col-span-3 flex justify-center"
-                    >
+                    <div className="sm:col-span-2 lg:col-span-3 flex justify-center">
                       <AdBanner
                         className="w-full max-w-sm"
                         slot="4444444444"
@@ -140,7 +156,7 @@ export default async function BlogIndexPage() {
                       />
                     </div>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </div>
           </div>

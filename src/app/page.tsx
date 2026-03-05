@@ -7,7 +7,8 @@ type BlogPost = {
   slug: string;
   title: string;
   excerpt?: string | null;
-  published_at?: string | null;
+  cover_image?: string | null;
+  created_at?: string | null;
 };
 
 async function getLatestPosts(): Promise<BlogPost[]> {
@@ -18,13 +19,13 @@ async function getLatestPosts(): Promise<BlogPost[]> {
     if (!supabaseUrl || !supabaseKey) return [];
 
     const res = await fetch(
-      `${supabaseUrl}/rest/v1/blog_posts?select=slug,title,excerpt,published_at&is_published=eq.true&order=published_at.desc&limit=3`,
+      `${supabaseUrl}/rest/v1/posts?select=slug,title,excerpt,cover_image,created_at&published=eq.true&order=created_at.desc&limit=3`,
       {
         headers: {
           apikey: supabaseKey,
           Authorization: `Bearer ${supabaseKey}`,
         },
-        next: { revalidate: 600 },
+        next: { revalidate: 300 },
       },
     );
 
@@ -341,27 +342,38 @@ export default async function Home() {
                 <a
                   key={post.slug}
                   href={`/blog/${post.slug}`}
-                  className="flex flex-col justify-between rounded-xl bg-white p-4 text-sm text-slate-700 shadow-sm shadow-slate-100 transition hover:-translate-y-0.5 hover:shadow-md"
+                  className="flex flex-col overflow-hidden rounded-xl bg-white text-sm text-slate-700 shadow-sm shadow-slate-100 transition hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <div>
-                    <h3 className="mb-1 line-clamp-2 text-sm font-semibold text-slate-900">
-                      {post.title}
-                    </h3>
-                    {post.excerpt && (
-                      <p className="line-clamp-3 text-xs text-slate-600 sm:text-sm">
-                        {post.excerpt}
+                  {post.cover_image && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={post.cover_image}
+                      alt={post.title}
+                      className="h-36 w-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                  <div className="flex flex-1 flex-col justify-between p-4">
+                    <div>
+                      <h3 className="mb-1 line-clamp-2 text-sm font-semibold text-slate-900">
+                        {post.title}
+                      </h3>
+                      {post.excerpt && (
+                        <p className="line-clamp-3 text-xs text-slate-600 sm:text-sm">
+                          {post.excerpt}
+                        </p>
+                      )}
+                    </div>
+                    {post.created_at && (
+                      <p className="mt-3 text-[11px] text-slate-400">
+                        {new Date(post.created_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </p>
                     )}
                   </div>
-                  {post.published_at && (
-                    <p className="mt-3 text-[11px] text-slate-400">
-                      {new Date(post.published_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  )}
                 </a>
               ))}
             </div>

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { supabase } from "@/lib/supabase";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import AdBanner from "@/components/AdBanner";
 
 type Post = {
@@ -11,13 +15,12 @@ type Post = {
   excerpt: string | null;
   content: string | null;
   cover_image: string | null;
+  tags: string[] | null;
   created_at: string | null;
   updated_at: string | null;
 };
 
-type Params = {
-  slug: string;
-};
+type Params = Promise<{ slug: string }>;
 
 function estimateReadTime(text: string | null | undefined): number {
   if (!text) return 1;
@@ -31,7 +34,7 @@ async function getPost(slug: string): Promise<Post | null> {
   const { data, error } = await supabase
     .from("posts")
     .select(
-      "id, title, slug, excerpt, content, cover_image, created_at, updated_at",
+      "id, title, slug, excerpt, content, cover_image, tags, created_at, updated_at",
     )
     .eq("slug", slug)
     .eq("published", true)
@@ -57,7 +60,8 @@ export async function generateStaticParams() {
 export async function generateMetadata(
   { params }: { params: Params },
 ): Promise<Metadata> {
-  const post = await getPost(params.slug);
+  const { slug } = await params;
+  const post = await getPost(slug);
   if (!post) {
     return {
       title: "Post not found | PNG Minify Blog",
@@ -92,7 +96,8 @@ export default async function BlogPostPage({
 }: {
   params: Params;
 }) {
-  const post = await getPost(params.slug);
+  const { slug } = await params;
+  const post = await getPost(slug);
 
   if (!post) notFound();
 
@@ -147,6 +152,7 @@ export default async function BlogPostPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-page">
+      <Header />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-10 sm:px-6 sm:py-14 lg:py-16">
         <script
           type="application/ld+json"
@@ -190,12 +196,44 @@ export default async function BlogPostPage({
           />
         )}
 
-        <article className="prose prose-sm max-w-none text-slate-800 prose-headings:text-slate-900 prose-a:text-primary sm:prose-base">
+        {post.tags && post.tags.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {post.tags.map((tag) => (
+              <a
+                key={tag}
+                href={`/blog/tag/${encodeURIComponent(tag)}`}
+                className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition hover:bg-primary/20"
+              >
+                #{tag}
+              </a>
+            ))}
+          </div>
+        )}
+
+        <article className="prose prose-sm max-w-none text-slate-800 prose-headings:text-slate-900 prose-a:text-primary prose-table:border prose-table:border-slate-200 prose-th:bg-slate-50 prose-th:px-4 prose-th:py-2 prose-td:border prose-td:border-slate-200 prose-td:px-4 prose-td:py-2 sm:prose-base">
           {post.content ? (
-            <div
-              // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: ({ href, children }) =>
+                  href?.startsWith("http") ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline-offset-2 hover:underline"
+                    >
+                      {children}
+                    </a>
+                  ) : (
+                    <Link href={href ?? "#"} className="text-primary underline-offset-2 hover:underline">
+                      {children}
+                    </Link>
+                  ),
+              }}
+            >
+              {post.content}
+            </ReactMarkdown>
           ) : (
             <p>
               This post does not have any content yet. Please add content in
@@ -250,6 +288,7 @@ export default async function BlogPostPage({
           </section>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

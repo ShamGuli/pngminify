@@ -39,17 +39,17 @@ function calcPercent(original: number, compressed: number): number {
 }
 
 // Map quality slider (0.1–1.0) → target maxSizeMB relative to original
+// Floor is 40% of original to prevent browser hang on extreme settings
 function qualityToMaxSizeMB(originalBytes: number, quality: number): number {
   const originalMB = originalBytes / 1024 / 1024;
-  // quality 1.0 = 90% of original, quality 0.1 = 15% of original
-  // Minimum floor of 0.3 MB to prevent browser hang on extreme compression
-  const factor = 0.15 + quality * 0.75;
-  return Math.max(0.3, originalMB * factor);
+  // quality 1.0 → 90%, quality 0.1 → 40% of original
+  const factor = 0.40 + quality * 0.50;
+  return Math.max(0.5, originalMB * factor);
 }
 
 const MAX_FILES = 20;
 const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
-const COMPRESSION_TIMEOUT_MS = 30_000; // 30 seconds max per file
+const COMPRESSION_TIMEOUT_MS = 20_000; // 20 seconds max per file
 
 export default function Compressor() {
   const [items, setItems] = useState<Item[]>([]);
@@ -90,7 +90,8 @@ export default function Compressor() {
         const result = await Promise.race([
           imageCompression(item.file, {
             maxSizeMB,
-            maxWidthOrHeight: 16384,
+            maxWidthOrHeight: 4096,
+            maxIteration: 5,
             useWebWorker: true,
             fileType: "image/png",
             onProgress: (pct) => {

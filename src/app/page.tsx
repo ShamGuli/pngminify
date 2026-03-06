@@ -64,7 +64,7 @@ export default async function Home() {
             <p className="inline-flex items-center rounded-full bg-primary/5 px-3 py-1 text-xs font-medium text-primary ring-1 ring-primary/10">
               Compress PNGs in your browser — no upload
             </p>
-            <h1 className="text-balance text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
               Compress PNG Images Online —{" "}
               <span className="text-primary">Free &amp; Instant</span>
             </h1>
@@ -74,7 +74,7 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3 text-xs sm:text-sm">
+          <div className="flex flex-wrap gap-2 text-xs sm:gap-3 sm:text-sm">
             <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm shadow-slate-100 ring-1 ring-slate-200">
               <span aria-hidden>🔒</span> 100% Private
             </span>
@@ -89,7 +89,7 @@ export default async function Home() {
 
         {/* COMPRESSOR */}
         <section className="mx-auto mt-8 max-w-5xl px-4 pb-10 sm:px-6 sm:pb-14 lg:pb-16">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-8">
             <Compressor />
 
             <div className="space-y-4 text-sm text-slate-600">

@@ -41,13 +41,15 @@ function calcPercent(original: number, compressed: number): number {
 // Map quality slider (0.1–1.0) → target maxSizeMB relative to original
 function qualityToMaxSizeMB(originalBytes: number, quality: number): number {
   const originalMB = originalBytes / 1024 / 1024;
-  // quality 1.0 = 90% of original, quality 0.1 = 5% of original
-  const factor = 0.05 + quality * 0.85;
-  return Math.max(0.05, originalMB * factor);
+  // quality 1.0 = 90% of original, quality 0.1 = 15% of original
+  // Minimum floor of 0.3 MB to prevent browser hang on extreme compression
+  const factor = 0.15 + quality * 0.75;
+  return Math.max(0.3, originalMB * factor);
 }
 
 const MAX_FILES = 20;
 const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
+const COMPRESSION_TIMEOUT_MS = 30_000; // 30 seconds max per file
 
 export default function Compressor() {
   const [items, setItems] = useState<Item[]>([]);
@@ -81,16 +83,22 @@ export default function Compressor() {
       try {
         const maxSizeMB = qualityToMaxSizeMB(item.originalSize, quality);
 
-        const result = await imageCompression(item.file, {
-          maxSizeMB,
-          maxWidthOrHeight: 16384,
-          useWebWorker: true,
-          fileType: "image/png",
-          onProgress: (pct) => {
-            // pct goes 0 → 100 during compression
-            updateItem(item.id, { progress: Math.max(10, Math.round(pct * 0.9)) });
-          },
-        });
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Compression timed out. Try a higher quality setting.")), COMPRESSION_TIMEOUT_MS)
+        );
+
+        const result = await Promise.race([
+          imageCompression(item.file, {
+            maxSizeMB,
+            maxWidthOrHeight: 16384,
+            useWebWorker: true,
+            fileType: "image/png",
+            onProgress: (pct) => {
+              updateItem(item.id, { progress: Math.max(10, Math.round(pct * 0.9)) });
+            },
+          }),
+          timeoutPromise,
+        ]);
 
         // Warn if compressed result is larger than original
         if (result.size >= item.originalSize) {
@@ -320,7 +328,7 @@ export default function Compressor() {
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-sm shadow-primary/40 transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-sm shadow-primary/40 transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-auto"
             >
               Choose PNG files
             </button>
@@ -408,7 +416,7 @@ export default function Compressor() {
               return (
                 <div
                   key={item.id}
-                  className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 sm:grid-cols-[1fr_180px_120px] sm:items-center sm:gap-4"
+                  className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-xs sm:grid-cols-[1fr_180px_120px] sm:items-center sm:gap-4 sm:text-sm"
                 >
                   {/* Thumbnail + name + sizes */}
                   <div className="flex min-w-0 items-center gap-3">
@@ -478,7 +486,7 @@ export default function Compressor() {
                   </div>
 
                   {/* Download button — separate column, never clipped */}
-                  <div className="flex items-center justify-start sm:justify-end">
+                  <div className="flex items-center justify-stretch sm:justify-end">
                     <button
                       type="button"
                       disabled={
@@ -493,7 +501,7 @@ export default function Compressor() {
                         a.click();
                         document.body.removeChild(a);
                       }}
-                      className="inline-flex min-w-[100px] items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+                      className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:min-w-[100px]"
                     >
                       Download
                     </button>

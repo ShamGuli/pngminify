@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect } from "react";
-
 type AdBannerProps = {
   className?: string;
   format?: string;
@@ -9,13 +5,6 @@ type AdBannerProps = {
   style?: React.CSSProperties;
 };
 
-declare global {
-  interface Window {
-    adsbygoogle?: unknown[];
-  }
-}
-
-export default function AdBanner() {
+export default function AdBanner(_props: AdBannerProps) {
   return null;
 }
-

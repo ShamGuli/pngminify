@@ -64,24 +64,16 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <head>
-        {/* Google tag (gtag.js) - exact snippet from Google Analytics */}
-        <script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${gaId}');
-            `,
-          }}
-        />
-      </head>
       <body className={`${inter.variable} antialiased bg-page text-slate-900`}>
+        {/* Google Analytics — afterInteractive: Chromium-based bot detects it */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`}
+        </Script>
+
         {adsenseId && (
           <Script
             id="adsense-init"

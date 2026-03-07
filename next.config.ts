@@ -31,18 +31,18 @@ const nextConfig: NextConfig = {
           ...(isDev
             ? []
             : [
-                {
-                  key: "Content-Security-Policy",
-                  value: [
-                    "default-src 'self'",
-                    "script-src 'self' https://www.googletagmanager.com https://pagead2.googlesyndication.com 'unsafe-inline'",
-                    "style-src 'self' 'unsafe-inline'",
-                    `img-src 'self' data: blob: https://${SUPABASE_HOST}`,
-                    `connect-src 'self' https://${SUPABASE_HOST} https://www.google-analytics.com`,
-                    "worker-src 'self' blob:",
-                    "frame-ancestors 'none'",
-                  ].join("; "),
-                },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://pagead2.googlesyndication.com 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              `img-src 'self' data: blob: https://${SUPABASE_HOST} https://www.google-analytics.com https://www.googletagmanager.com`,
+              `connect-src 'self' https://${SUPABASE_HOST} https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net`,
+              "worker-src 'self' blob:",
+              "frame-ancestors 'none'",
+            ].join("; "),
+          },
               ]),
         ],
       },

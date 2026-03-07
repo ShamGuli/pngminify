@@ -62,12 +62,12 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased bg-page text-slate-900`}>
+      <head>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         />
-        <Script id="ga4-init" strategy="afterInteractive">
+        <Script id="ga4-init" strategy="beforeInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
@@ -75,7 +75,8 @@ export default function RootLayout({
             gtag('config', '${gaId}');
           `}
         </Script>
-
+      </head>
+      <body className={`${inter.variable} antialiased bg-page text-slate-900`}>
         {adsenseId && (
           <Script
             id="adsense-init"

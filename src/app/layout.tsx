@@ -4,6 +4,8 @@ import Script from "next/script";
 import "./globals.css";
 import SchemaOrg from "@/components/SchemaOrg";
 
+const GA_ID = "G-P0PY11QGW7";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -57,24 +59,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID || "G-P0PY11QGW7";
   const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID;
+  const gaId = process.env.NEXT_PUBLIC_GA_ID || GA_ID;
 
   return (
     <html lang="en">
       <head>
-        <Script
+        {/* Google tag (gtag.js) - exact snippet from Google Analytics */}
+        <script
+          async
           src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-          strategy="beforeInteractive"
         />
-        <Script id="ga4-init" strategy="beforeInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${gaId}');
-          `}
-        </Script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${gaId}');
+            `,
+          }}
+        />
       </head>
       <body className={`${inter.variable} antialiased bg-page text-slate-900`}>
         {adsenseId && (

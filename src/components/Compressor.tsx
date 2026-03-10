@@ -38,26 +38,27 @@ function calcPercent(original: number, compressed: number): number {
   return Math.max(0, Math.round(((original - compressed) / original) * 100));
 }
 
-// Map quality slider (0.1–1.0) → target maxSizeMB relative to original
-// Wider range: quality 1.0 → 85% of original, quality 0.1 → 5% of original
-function qualityToMaxSizeMB(originalBytes: number, quality: number): number {
+// Map compression slider (10–90%) → target maxSizeMB relative to original
+// compression 90% → keep 10% of original (aggressive)
+// compression 10% → keep 90% of original (light)
+function compressionToMaxSizeMB(originalBytes: number, compression: number): number {
   const originalMB = originalBytes / 1024 / 1024;
-  // Exponential curve for better perceptual control:
-  // quality 1.0 → factor 0.85 (light compression)
-  // quality 0.5 → factor 0.25 (moderate)
-  // quality 0.1 → factor 0.05 (aggressive)
-  const factor = 0.05 + 0.80 * Math.pow(quality, 1.8);
-  return Math.max(0.01, originalMB * factor);
+  const keepFactor = 1 - compression; // compression 0.9 → keep 0.1
+  return Math.max(0.01, originalMB * keepFactor);
 }
 
 const MAX_FILES = 20;
 const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
-const COMPRESSION_TIMEOUT_MS = 20_000; // 20 seconds max per file
+// Timeout scales with file size: 30s base + 10s per MB
+function getTimeoutMs(sizeBytes: number): number {
+  const sizeMB = sizeBytes / 1024 / 1024;
+  return Math.max(30_000, Math.min(120_000, 30_000 + sizeMB * 10_000));
+}
 
 export default function Compressor() {
   const [items, setItems] = useState<Item[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [quality, setQuality] = useState(0.8);
+  const [compression, setCompression] = useState(0.6);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isZipping, setIsZipping] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -84,17 +85,23 @@ export default function Compressor() {
   const compressFile = useCallback(
     async (item: Item) => {
       try {
-        const maxSizeMB = qualityToMaxSizeMB(item.originalSize, quality);
+        const maxSizeMB = compressionToMaxSizeMB(item.originalSize, compression);
+        const timeoutMs = getTimeoutMs(item.originalSize);
+
+        // For aggressive compression on large files, also reduce dimensions
+        const maxDimension = compression >= 0.8 && item.originalSize > 4 * 1024 * 1024
+          ? 2048
+          : 4096;
 
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Compression timed out. Try a higher quality setting.")), COMPRESSION_TIMEOUT_MS)
+          setTimeout(() => reject(new Error("Compression timed out. Try a lower compression level or a smaller file.")), timeoutMs)
         );
 
         const result = await Promise.race([
           imageCompression(item.file, {
             maxSizeMB,
-            maxWidthOrHeight: 4096,
-            maxIteration: 15,
+            maxWidthOrHeight: maxDimension,
+            maxIteration: 20,
             useWebWorker: true,
             fileType: "image/png",
             onProgress: (pct) => {
@@ -137,7 +144,7 @@ export default function Compressor() {
         });
       }
     },
-    [quality, updateItem],
+    [compression, updateItem],
   );
 
   const handleFiles = useCallback(
@@ -294,225 +301,285 @@ export default function Compressor() {
     [items],
   );
 
-  return (
-    <div className="space-y-6">
-      {/* ─── Upload zone ─── */}
-      <div
-        className={`relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-10 text-center transition-colors sm:px-8 ${
-          isDragging && isDragInvalid
-            ? "border-red-400 bg-red-50"
-            : isDragging
-              ? "border-primary bg-primary/5"
+  const hasItems = items.length > 0;
+
+  /* ─── Upload zone (reusable in both layouts) ─── */
+  const uploadZone = (
+    <div
+      className={`relative flex h-full cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed text-center transition-colors ${hasItems ? "px-4 py-6" : "px-6 py-10 sm:px-8"} ${
+        isDragging && isDragInvalid
+          ? "border-red-400 bg-red-50"
+          : isDragging
+            ? "border-primary bg-primary/5"
+            : hasItems
+              ? "border-slate-200 bg-white/60 hover:border-primary/60 hover:bg-primary/5"
               : "border-slate-300 bg-white/60 hover:border-primary/60 hover:bg-primary/5"
-        }`}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDragEnd={() => setIsDragging(false)}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/png"
-          multiple
-          className="hidden"
-          onChange={onInputChange}
-        />
+      }`}
+      onDrop={onDrop}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDragEnd={() => setIsDragging(false)}
+      onClick={() => fileInputRef.current?.click()}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png"
+        multiple
+        className="hidden"
+        onChange={onInputChange}
+      />
 
-        <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-          <span className="h-2 w-2 rounded-full bg-primary" />
-          Drop PNG files here to start
-        </div>
-
-        <div className="mt-4 space-y-3">
-          <p className="text-sm text-slate-600">
-            Drag &amp; drop PNG images or click to browse.
-          </p>
-          <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
-            <button
-              type="button"
-              className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-sm shadow-primary/40 transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-auto"
-            >
-              Choose PNG files
-            </button>
-            <p className="text-xs text-slate-500">
-              Max {MAX_FILES} files • PNG only • &lt; 50 MB each.
-            </p>
+      {hasItems ? (
+        /* Compact version when files are loaded */
+        <div className="space-y-3 text-center">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
           </div>
-        </div>
-
-        {/* Quality slider */}
-        <div className="mt-6 w-full max-w-md space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-600">
-            <span>Quality</span>
-            <span className="font-medium">{Math.round(quality * 100)}% {quality >= 0.7 ? "(light)" : quality >= 0.4 ? "(medium)" : "(aggressive)"}</span>
+          <div>
+            <p className="text-sm font-medium text-slate-700">Add more files</p>
+            <p className="mt-0.5 text-[11px] text-slate-400">PNG only • max 50 MB</p>
           </div>
-          <input
-            type="range"
-            min={0.1}
-            max={1}
-            step={0.05}
-            value={quality}
-            onChange={(e) => setQuality(parseFloat(e.target.value))}
-            className="w-full accent-primary"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <p className="text-[11px] text-slate-500">
-            Lower = smaller output. Results vary by PNG content.
-          </p>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-primary px-5 py-2 text-xs font-medium text-white shadow-sm shadow-primary/40 transition hover:bg-primary/90"
+          >
+            Choose PNG files
+          </button>
         </div>
-
-        {errorMessage && (
-          <p className="mt-4 max-w-md text-xs text-red-600">{errorMessage}</p>
-        )}
-      </div>
-
-      {/* ─── File list ─── */}
-      {items.length > 0 && (
-        <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm shadow-slate-100 sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm font-medium text-slate-800">
-              Files ({items.length})
+      ) : (
+        /* Full version when empty */
+        <>
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            <span className="h-2 w-2 rounded-full bg-primary" />
+            Drop PNG files here to start
+          </div>
+          <div className="mt-4 space-y-3">
+            <p className="text-sm text-slate-600">
+              Drag &amp; drop PNG images or click to browse.
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
               <button
                 type="button"
-                onClick={handleDownloadAll}
-                disabled={!anyDone || isZipping}
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-sm shadow-primary/40 transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-auto"
               >
-                {isZipping ? "Preparing ZIP…" : "Download all"}
+                Choose PNG files
               </button>
-              <button
-                type="button"
-                onClick={resetAll}
-                className="inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
-              >
-                Compress another
-              </button>
+              <p className="text-xs text-slate-500">
+                Max {MAX_FILES} files • PNG only • &lt; 50 MB each
+              </p>
             </div>
           </div>
+          {/* Compression slider — shown only in empty state */}
+          <div className="mt-6 w-full max-w-md space-y-2">
+            <div className="flex items-center justify-between text-xs text-slate-600">
+              <span>Compression</span>
+              <span className="font-medium">
+                {Math.round(compression * 100)}%{" "}
+                {compression >= 0.7 ? "(aggressive)" : compression >= 0.4 ? "(medium)" : "(light)"}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0.1}
+              max={0.9}
+              step={0.05}
+              value={compression}
+              onChange={(e) => setCompression(parseFloat(e.target.value))}
+              className="w-full accent-primary"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <p className="text-[11px] text-slate-500">
+              Higher = smaller file. Target ≈ {Math.round((1 - compression) * 100)}% of original size.
+            </p>
+          </div>
+        </>
+      )}
 
-          <div className="space-y-3">
-            {items.map((item) => {
-              const isDone = item.status === "done";
-              const isWarn = item.status === "warn";
-              const isError = item.status === "error";
-              const isProcessing = item.status === "processing";
+      {errorMessage && (
+        <p className="mt-4 max-w-md text-xs text-red-600">{errorMessage}</p>
+      )}
+    </div>
+  );
 
-              const barColor = isError
-                ? "bg-red-500"
-                : isWarn
-                  ? "bg-amber-400"
-                  : isDone
-                    ? "bg-emerald-500"
-                    : "bg-primary";
+  return (
+    <div className="space-y-0">
+      {!hasItems ? (
+        /* ─── EMPTY STATE: full-width upload zone ─── */
+        uploadZone
+      ) : (
+        /* ─── LOADED STATE: 40% left / 60% right ─── */
+        <div className="grid gap-4" style={{ gridTemplateColumns: "2fr 3fr" }}>
+          {/* LEFT — compact upload zone (sticky) */}
+          <div className="self-start sticky top-4">
+            {uploadZone}
+          </div>
 
-              const statusText = isError
-                ? item.error ?? "Compression failed."
-                : isWarn
-                  ? item.error ?? "Could not reduce file size."
-                  : isDone
-                    ? "Compressed successfully."
-                    : "Compressing…";
-
-              return (
+          {/* RIGHT — results panel */}
+          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100 sm:p-5" style={{ minWidth: 0 }}>
+            {/* Header */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <p className="text-sm font-medium text-slate-800">
+                  Files ({items.length})
+                </p>
+                {/* Compression slider — shown in results panel when files are loaded */}
                 <div
-                  key={item.id}
-                  className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-xs sm:grid-cols-[1fr_180px_120px] sm:items-center sm:gap-4 sm:text-sm"
+                  className="flex items-center gap-2 text-xs text-slate-500"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Thumbnail + name + sizes */}
-                  <div className="flex min-w-0 items-center gap-3">
-                    {item.thumbnailUrl && (
-                      <div className="hidden h-12 w-12 flex-none overflow-hidden rounded-md bg-white shadow-sm sm:block">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={item.thumbnailUrl}
-                          alt={item.name}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-medium text-slate-800 sm:text-sm">
-                        {item.name}
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-slate-500">
-                        {formatBytes(item.originalSize)}
-                        {item.compressedSize != null && (
-                          <>
-                            {" → "}
-                            <span
-                              className={
-                                isDone
-                                  ? "font-medium text-emerald-600"
-                                  : isWarn
-                                    ? "font-medium text-amber-600"
-                                    : ""
-                              }
-                            >
-                              {formatBytes(item.compressedSize)}
-                            </span>
-                            {item.percentSaved != null &&
-                              item.percentSaved > 0 && (
+                  <span className="hidden sm:inline">Compression:</span>
+                  <input
+                    type="range"
+                    min={0.1}
+                    max={0.9}
+                    step={0.05}
+                    value={compression}
+                    onChange={(e) => setCompression(parseFloat(e.target.value))}
+                    className="w-20 accent-primary"
+                  />
+                  <span className="font-medium text-primary">{Math.round(compression * 100)}%</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleDownloadAll}
+                  disabled={!anyDone || isZipping}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {isZipping ? "Preparing ZIP…" : "Download all"}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetAll}
+                  className="inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  Compress another
+                </button>
+              </div>
+            </div>
+
+            {/* File list */}
+            <div className="space-y-3">
+              {items.map((item) => {
+                const isDone = item.status === "done";
+                const isWarn = item.status === "warn";
+                const isError = item.status === "error";
+                const isProcessing = item.status === "processing";
+
+                const barColor = isError
+                  ? "bg-red-500"
+                  : isWarn
+                    ? "bg-amber-400"
+                    : isDone
+                      ? "bg-emerald-500"
+                      : "bg-primary";
+
+                const statusText = isError
+                  ? item.error ?? "Compression failed."
+                  : isWarn
+                    ? item.error ?? "Could not reduce file size."
+                    : isDone
+                      ? "Compressed successfully."
+                      : "Compressing…";
+
+                return (
+                  <div
+                    key={item.id}
+                    className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-xs sm:grid-cols-[1fr_160px_100px] sm:items-center sm:gap-4 sm:text-sm"
+                  >
+                    {/* Thumbnail + name + sizes */}
+                    <div className="flex min-w-0 items-center gap-3">
+                      {item.thumbnailUrl && (
+                        <div className="hidden h-12 w-12 flex-none overflow-hidden rounded-md bg-white shadow-sm sm:block">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={item.thumbnailUrl}
+                            alt={item.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-medium text-slate-800 sm:text-sm">
+                          {item.name}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-slate-500">
+                          {formatBytes(item.originalSize)}
+                          {item.compressedSize != null && (
+                            <>
+                              {" → "}
+                              <span
+                                className={
+                                  isDone
+                                    ? "font-medium text-emerald-600"
+                                    : isWarn
+                                      ? "font-medium text-amber-600"
+                                      : ""
+                                }
+                              >
+                                {formatBytes(item.compressedSize)}
+                              </span>
+                              {item.percentSaved != null && item.percentSaved > 0 && (
                                 <span className="ml-1 text-emerald-600">
                                   ({item.percentSaved}% smaller)
                                 </span>
                               )}
-                          </>
-                        )}
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Progress bar + status */}
+                    <div className="space-y-1.5">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className={`h-full rounded-full transition-all ${barColor}`}
+                          style={{ width: `${item.progress}%` }}
+                        />
+                      </div>
+                      <p
+                        className={`text-[11px] ${
+                          isError
+                            ? "text-red-600"
+                            : isWarn
+                              ? "text-amber-600"
+                              : isProcessing
+                                ? "text-slate-500"
+                                : "text-emerald-600"
+                        }`}
+                      >
+                        {statusText}
                       </p>
                     </div>
-                  </div>
 
-                  {/* Progress bar + status */}
-                  <div className="space-y-1.5">
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className={`h-full rounded-full transition-all ${barColor}`}
-                        style={{ width: `${item.progress}%` }}
-                      />
+                    {/* Download button */}
+                    <div className="flex items-center justify-stretch sm:justify-end">
+                      <button
+                        type="button"
+                        disabled={(!isDone && !isWarn) || !item.downloadUrl}
+                        onClick={() => {
+                          if (!item.downloadUrl) return;
+                          const a = document.createElement("a");
+                          a.href = item.downloadUrl;
+                          a.download = item.name.replace(/\.png$/i, "-min.png");
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }}
+                        className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:min-w-[90px]"
+                      >
+                        Download
+                      </button>
                     </div>
-                    <p
-                      className={`text-[11px] ${
-                        isError
-                          ? "text-red-600"
-                          : isWarn
-                            ? "text-amber-600"
-                            : isProcessing
-                              ? "text-slate-500"
-                              : "text-emerald-600"
-                      }`}
-                    >
-                      {statusText}
-                    </p>
                   </div>
-
-                  {/* Download button — separate column, never clipped */}
-                  <div className="flex items-center justify-stretch sm:justify-end">
-                    <button
-                      type="button"
-                      disabled={
-                        (!isDone && !isWarn) || !item.downloadUrl
-                      }
-                      onClick={() => {
-                        if (!item.downloadUrl) return;
-                        const a = document.createElement("a");
-                        a.href = item.downloadUrl;
-                        a.download = item.name.replace(/\.png$/i, "-min.png");
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                      }}
-                      className="inline-flex w-full items-center justify-center whitespace-nowrap rounded-full border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:min-w-[100px]"
-                    >
-                      Download
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

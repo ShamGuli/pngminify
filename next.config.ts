@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: SUPABASE_HOST,
+        hostname: "*.supabase.co",
       },
     ],
   },
@@ -37,8 +37,8 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://pagead2.googlesyndication.com 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              `img-src 'self' data: blob: https://${SUPABASE_HOST} https://www.google-analytics.com https://www.googletagmanager.com`,
-              `connect-src 'self' https://${SUPABASE_HOST} https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net`,
+              `img-src 'self' data: blob: https://*.supabase.co https://www.google-analytics.com https://www.googletagmanager.com`,
+              `connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net`,
               "worker-src 'self' blob:",
               "frame-ancestors 'none'",
             ].join("; "),

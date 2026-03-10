@@ -9,12 +9,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // login route həmişə açıq qalsın
+  // login route is always public
   if (req.nextUrl.pathname === "/admin/login") {
     return NextResponse.next();
   }
 
-  let res = NextResponse.next();
+  let res = NextResponse.next({ request: req });
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
@@ -22,28 +22,37 @@ export async function middleware(req: NextRequest) {
         return req.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            res.cookies.set(name, value, options),
-          );
-        } catch {
-          // ignore
-        }
+        // Update request cookies so downstream middleware/routes see fresh tokens
+        cookiesToSet.forEach(({ name, value }) =>
+          req.cookies.set(name, value),
+        );
+        // Recreate response to carry updated request cookies
+        res = NextResponse.next({ request: req });
+        // Set cookies on the response so the browser stores them
+        cookiesToSet.forEach(({ name, value, options }) =>
+          res.cookies.set(name, value, options),
+        );
       },
     },
   });
 
+  // getUser() validates JWT with Supabase server — more secure than getSession()
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
 
-  if (isAdminRoute && !session) {
+  if (isAdminRoute && !user) {
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = "/admin/login";
     redirectUrl.searchParams.set("redirectTo", req.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
+    const redirectRes = NextResponse.redirect(redirectUrl);
+    // Copy any refreshed auth cookies to the redirect response
+    res.cookies.getAll().forEach((cookie) => {
+      redirectRes.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectRes;
   }
 
   return res;
@@ -52,4 +61,3 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/admin/:path*"],
 };
-

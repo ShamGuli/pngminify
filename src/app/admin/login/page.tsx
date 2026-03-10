@@ -19,8 +19,8 @@ function LoginForm() {
       setChecking(false);
       return;
     }
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
         const redirectTo = searchParams.get("redirectTo") || "/admin";
         router.replace(redirectTo);
       } else {

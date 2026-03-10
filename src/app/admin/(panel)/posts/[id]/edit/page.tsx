@@ -6,7 +6,7 @@ type Params = Promise<{ id: string }>;
 
 export default async function EditPostPage({ params }: { params: Params }) {
   const { id } = await params;
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     notFound();
   }

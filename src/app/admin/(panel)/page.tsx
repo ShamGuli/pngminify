@@ -11,7 +11,7 @@ type PostRow = {
 };
 
 export default async function AdminDashboardPage() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   let posts: PostRow[] = [];
 

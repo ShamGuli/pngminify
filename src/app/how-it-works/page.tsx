@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "How PNG Minify Works — Browser-side PNG Compression",
   description:
     "Understand how PNG Minify compresses images directly in your browser in three simple steps: upload, compress, download.",
+  alternates: { canonical: "https://pngminify.com/how-it-works" },
 };
 
 export default function HowItWorksPage() {

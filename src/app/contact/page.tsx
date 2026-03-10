@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Contact — PNG Minify",
   description:
     "Get in touch with the PNG Minify team. Ask questions, send feedback, or suggest new features.",
+  alternates: { canonical: "https://pngminify.com/contact" },
 };
 
 export default function ContactPage() {

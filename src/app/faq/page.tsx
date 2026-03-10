@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "PNG Minify FAQ — Frequently Asked Questions",
   description:
     "Answers to common questions about PNG Minify: pricing, privacy, limits, and how PNG compression works.",
+  alternates: { canonical: "https://pngminify.com/faq" },
 };
 
 const faqs = [

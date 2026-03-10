@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AdBanner from "@/components/AdBanner";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "PNG Minify Blog — Tips for Faster, Lighter PNG Images",
   description:
     "Learn how to optimize PNG images for the web. Guides on compression, performance, best practices, and image workflows.",
+  alternates: { canonical: "https://pngminify.com/blog" },
   openGraph: {
     title: "PNG Minify Blog — PNG Optimization Guides",
     description:
       "Deep dives on PNG optimization, performance tips, and image workflows for modern web apps.",
-    url: "/blog",
+    url: "https://pngminify.com/blog",
     type: "website",
   },
 };
@@ -115,12 +119,12 @@ export default async function BlogIndexPage() {
                     className="flex flex-col overflow-hidden rounded-xl bg-white text-sm text-slate-700 shadow-sm shadow-slate-100 transition hover:-translate-y-0.5 hover:shadow-md"
                   >
                     {post.cover_image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={post.cover_image}
                         alt={post.title}
+                        width={400}
+                        height={144}
                         className="h-36 w-full object-cover"
-                        loading="lazy"
                       />
                     )}
                     <div className="flex flex-1 flex-col p-4">

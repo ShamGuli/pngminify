@@ -5,7 +5,8 @@ import Footer from "@/components/Footer";
 export const metadata: Metadata = {
   title: "Privacy Policy — PNG Minify",
   description:
-    "Learn how PNG Minify handles your data. All PNG compression runs entirely in your browser — no uploads, no tracking.",
+    "Learn how PNG Minify handles your data. All PNG compression runs entirely in your browser — no uploads.",
+  alternates: { canonical: "https://pngminify.com/privacy" },
 };
 
 export default function PrivacyPage() {
@@ -39,12 +40,15 @@ export default function PrivacyPage() {
           </p>
 
           <h2 className="text-sm font-semibold text-slate-900">
-            2. No tracking or analytics
+            2. Analytics
           </h2>
           <p>
-            We do not use cookies, analytics scripts, or any form of tracking
-            to identify you or your usage. We are not interested in who you are
-            or what you compress.
+            We use Google Analytics to collect anonymous, aggregated data about
+            how visitors use the site (page views, traffic sources, device
+            types). This helps us improve the service. Google Analytics does
+            not have access to the images you compress — those never leave your
+            browser. You can opt out by using a browser extension or disabling
+            JavaScript.
           </p>
 
           <h2 className="text-sm font-semibold text-slate-900">

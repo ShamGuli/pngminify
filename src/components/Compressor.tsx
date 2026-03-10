@@ -39,12 +39,15 @@ function calcPercent(original: number, compressed: number): number {
 }
 
 // Map quality slider (0.1–1.0) → target maxSizeMB relative to original
-// Floor is 40% of original to prevent browser hang on extreme settings
+// Wider range: quality 1.0 → 85% of original, quality 0.1 → 5% of original
 function qualityToMaxSizeMB(originalBytes: number, quality: number): number {
   const originalMB = originalBytes / 1024 / 1024;
-  // quality 1.0 → 90%, quality 0.1 → 40% of original
-  const factor = 0.40 + quality * 0.50;
-  return Math.max(0.5, originalMB * factor);
+  // Exponential curve for better perceptual control:
+  // quality 1.0 → factor 0.85 (light compression)
+  // quality 0.5 → factor 0.25 (moderate)
+  // quality 0.1 → factor 0.05 (aggressive)
+  const factor = 0.05 + 0.80 * Math.pow(quality, 1.8);
+  return Math.max(0.01, originalMB * factor);
 }
 
 const MAX_FILES = 20;
@@ -91,7 +94,7 @@ export default function Compressor() {
           imageCompression(item.file, {
             maxSizeMB,
             maxWidthOrHeight: 4096,
-            maxIteration: 5,
+            maxIteration: 15,
             useWebWorker: true,
             fileType: "image/png",
             onProgress: (pct) => {
@@ -342,8 +345,8 @@ export default function Compressor() {
         {/* Quality slider */}
         <div className="mt-6 w-full max-w-md space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-600">
-            <span>Target size reduction</span>
-            <span>{Math.round(quality * 100)}%</span>
+            <span>Quality</span>
+            <span className="font-medium">{Math.round(quality * 100)}% {quality >= 0.7 ? "(light)" : quality >= 0.4 ? "(medium)" : "(aggressive)"}</span>
           </div>
           <input
             type="range"

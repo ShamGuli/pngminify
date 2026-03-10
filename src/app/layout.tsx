@@ -23,7 +23,9 @@ export const metadata: Metadata = {
   description: siteDescription,
   icons: {
     icon: "/favicon.png",
+    apple: "/apple-touch-icon.svg",
   },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: siteTitle,
     description: siteDescription,
@@ -39,11 +41,26 @@ export const metadata: Metadata = {
     ],
     type: "website",
   },
+  keywords: [
+    "compress png",
+    "png compressor",
+    "png minify",
+    "reduce png size",
+    "compress png online",
+    "free png compressor",
+    "png optimizer",
+    "shrink png",
+    "png file size reducer",
+    "compress png without losing quality",
+    "batch png compression",
+    "browser png compressor",
+  ],
   alternates: {
     canonical: siteUrl,
   },
   twitter: {
     card: "summary_large_image",
+    site: "@pngminify",
     title: siteTitle,
     description: siteDescription,
     images: ["/og.png"],

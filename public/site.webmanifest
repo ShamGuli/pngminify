@@ -1,0 +1,21 @@
+{
+  "name": "PNG Minify",
+  "short_name": "PNG Minify",
+  "description": "Free PNG compressor — compress PNG images in your browser, no upload required.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6c47ff",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml"
+    }
+  ]
+}

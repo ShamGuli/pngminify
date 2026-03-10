@@ -9,7 +9,7 @@ export default function DeletePostButton({ id }: { id: string }) {
   const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
-    if (!window.confirm("Bu postu silmək istədiyinizə əminsiniz?")) return;
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
 
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;

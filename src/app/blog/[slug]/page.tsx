@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "@/lib/supabase";
@@ -188,11 +189,13 @@ export default async function BlogPostPage({
         </header>
 
         {post.cover_image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={post.cover_image}
             alt={post.title}
+            width={768}
+            height={288}
             className="mb-8 h-56 w-full rounded-xl object-cover sm:h-72"
+            priority
           />
         )}
 

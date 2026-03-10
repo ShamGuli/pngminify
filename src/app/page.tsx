@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Compressor from "@/components/Compressor";
@@ -58,63 +59,33 @@ export default async function Home() {
           />
         </section>
 
-        {/* HERO */}
-        <section className="mx-auto flex max-w-5xl flex-col gap-8 px-4 pt-10 sm:px-6 sm:pt-14 lg:pt-16">
-          <div className="max-w-2xl space-y-4">
-            <p className="inline-flex items-center rounded-full bg-primary/5 px-3 py-1 text-xs font-medium text-primary ring-1 ring-primary/10">
-              Compress PNGs in your browser — no upload
-            </p>
-            <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
-              Compress PNG Images Online —{" "}
+        {/* HERO — compact so compressor is above the fold */}
+        <section className="mx-auto flex max-w-5xl flex-col gap-3 px-4 pt-6 sm:px-6 sm:pt-8">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl md:text-3xl">
+              Compress PNG Images —{" "}
               <span className="text-primary">Free &amp; Instant</span>
             </h1>
-            <p className="text-pretty text-sm leading-relaxed text-slate-600 sm:text-base">
-              Reduce PNG file size up to 80% without losing quality. No signup.
-              No upload to server. Everything happens securely in your browser.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 text-xs sm:gap-3 sm:text-sm">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm shadow-slate-100 ring-1 ring-slate-200">
-              <span aria-hidden>🔒</span> 100% Private
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm shadow-slate-100 ring-1 ring-slate-200">
-              <span aria-hidden>⚡</span> Instant
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-slate-700 shadow-sm shadow-slate-100 ring-1 ring-slate-200">
-              <span aria-hidden>✅</span> Free Forever
-            </span>
-          </div>
-        </section>
-
-        {/* COMPRESSOR */}
-        <section className="mx-auto mt-8 max-w-5xl px-4 pb-10 sm:px-6 sm:pb-14 lg:pb-16">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-8">
-            <Compressor />
-
-            <div className="space-y-4 text-sm text-slate-600">
-              <div className="rounded-xl bg-white p-4 shadow-sm shadow-slate-100">
-                <h2 className="mb-1 text-sm font-semibold text-slate-900">
-                  Why PNG Minify?
-                </h2>
-                <ul className="space-y-1.5">
-                  <li>• Up to 80% smaller PNG files</li>
-                  <li>• No uploads — everything stays on your device</li>
-                  <li>• Perfect for web, apps, and UI assets</li>
-                </ul>
-              </div>
-              <div className="rounded-xl bg-slate-50 p-4 text-xs text-slate-500">
-                <p className="mb-1 font-medium text-slate-700">
-                  Tip for best results:
-                </p>
-                <p>
-                  Icons and UI assets already optimized as SVG or WebP may not
-                  compress much further. PNG Minify works best on screenshots
-                  and photographic PNGs.
-                </p>
-              </div>
+            <div className="flex flex-wrap gap-1.5 text-[11px] sm:text-xs">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-slate-600 ring-1 ring-slate-200">
+                <span aria-hidden>🔒</span> Private
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-slate-600 ring-1 ring-slate-200">
+                <span aria-hidden>⚡</span> Instant
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-slate-600 ring-1 ring-slate-200">
+                <span aria-hidden>✅</span> Free
+              </span>
             </div>
           </div>
+          <p className="max-w-2xl text-sm text-slate-600">
+            Reduce PNG file size up to 80% without losing quality. No signup, no upload to server — everything stays in your browser.
+          </p>
+        </section>
+
+        {/* COMPRESSOR — immediately visible */}
+        <section className="mx-auto mt-4 max-w-5xl px-4 pb-10 sm:px-6 sm:pb-14">
+          <Compressor />
 
           {/* Rectangle ad under compressor */}
           <div className="mt-8 flex justify-center">
@@ -275,44 +246,48 @@ export default async function Home() {
               Related tools
             </h2>
             <p className="text-xs text-slate-500 sm:text-sm">
-              Coming soon — a full suite of minify tools.
+              A growing suite of minify tools for every format.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 name: "miniwebp.com",
+                href: "https://miniwebp.com",
                 desc: "Compress WEBP images for ultra-light web assets.",
               },
               {
                 name: "miniheic.com",
+                href: "https://miniheic.com",
                 desc: "Convert and compress HEIC photos from iOS devices.",
               },
               {
                 name: "mp3mini.com",
+                href: "https://mp3mini.com",
                 desc: "Reduce MP3 file size for podcasts and audio files.",
               },
               {
                 name: "pdfminify.com",
+                href: "https://pdfminify.com",
                 desc: "Shrink large PDF documents for faster sharing.",
               },
             ].map((tool) => (
-              <div
+              <a
                 key={tool.name}
-                className="flex flex-col justify-between rounded-xl bg-white p-4 text-sm text-slate-600 shadow-sm shadow-slate-100"
+                href={tool.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col justify-between rounded-xl bg-white p-4 text-sm text-slate-600 shadow-sm shadow-slate-100 transition hover:-translate-y-0.5 hover:shadow-md"
               >
                 <div>
-                  <h3 className="mb-1 text-sm font-semibold text-slate-900">
+                  <h3 className="mb-1 text-sm font-semibold text-primary">
                     {tool.name}
                   </h3>
                   <p className="text-xs text-slate-600 sm:text-sm">
                     {tool.desc}
                   </p>
                 </div>
-                <p className="mt-3 text-[11px] text-slate-400">
-                  Placeholder — not yet available.
-                </p>
-              </div>
+              </a>
             ))}
           </div>
         </section>
@@ -345,12 +320,12 @@ export default async function Home() {
                   className="flex flex-col overflow-hidden rounded-xl bg-white text-sm text-slate-700 shadow-sm shadow-slate-100 transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   {post.cover_image && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={post.cover_image}
                       alt={post.title}
+                      width={400}
+                      height={144}
                       className="h-36 w-full object-cover"
-                      loading="lazy"
                     />
                   )}
                   <div className="flex flex-1 flex-col justify-between p-4">

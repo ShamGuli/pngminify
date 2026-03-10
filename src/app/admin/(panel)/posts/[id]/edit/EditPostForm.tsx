@@ -95,7 +95,7 @@ export default function EditPostForm({ initialPost }: { initialPost: EditPost })
         content: form.content || null,
         cover_image: form.coverImage || null,
         tags: form.tags ?? [],
-        published: true,
+        published: form.published,
       })
       .eq("id", form.id);
 
@@ -281,6 +281,19 @@ export default function EditPostForm({ initialPost }: { initialPost: EditPost })
             </div>
           )}
         </div>
+
+        {/* Published toggle */}
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={form.published}
+            onChange={(e) => update("published", e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-primary accent-primary"
+          />
+          <span className="text-xs font-medium text-slate-700">
+            {form.published ? "Published" : "Draft (not visible on site)"}
+          </span>
+        </label>
 
         {error && <p className="text-xs text-red-600">{error}</p>}
 

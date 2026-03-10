@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Terms of Service — PNG Minify",
   description:
     "Terms of Service for using PNG Minify, a free browser-based PNG compression tool.",
+  alternates: { canonical: "https://pngminify.com/terms" },
 };
 
 export default function TermsPage() {

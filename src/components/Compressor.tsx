@@ -411,14 +411,14 @@ export default function Compressor() {
         uploadZone
       ) : (
         /* ─── LOADED STATE: 40% left / 60% right ─── */
-        <div className="grid gap-4" style={{ gridTemplateColumns: "2fr 3fr" }}>
-          {/* LEFT — compact upload zone (sticky) */}
-          <div className="self-start sticky top-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_3fr]">
+          {/* LEFT — compact upload zone (sticky on desktop) */}
+          <div className="self-start md:sticky md:top-4">
             {uploadZone}
           </div>
 
           {/* RIGHT — results panel */}
-          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100 sm:p-5" style={{ minWidth: 0 }}>
+          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100 sm:p-5 min-w-0">
             {/* Header */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">

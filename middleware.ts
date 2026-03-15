@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+const ALLOWED_ORIGINS = [
+  "https://pngminify.com",
+  "https://www.pngminify.com",
+];
+
 export async function middleware(req: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -15,6 +20,12 @@ export async function middleware(req: NextRequest) {
   }
 
   let res = NextResponse.next({ request: req });
+
+  // Restrict CORS to allowed origins only
+  const origin = req.headers.get("origin");
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.headers.set("Access-Control-Allow-Origin", origin);
+  }
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
@@ -59,5 +70,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/api/:path*"],
 };

@@ -74,7 +74,7 @@ export default async function TagPage({ params }: { params: Params }) {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={post.cover_image || "/og.png"}
+                  src={post.cover_image || "/blog-default.svg"}
                   alt={post.title}
                   className="aspect-video w-full object-cover"
                 />

@@ -83,7 +83,7 @@ export async function generateMetadata(
         "PNG optimization tips and best practices from PNG Minify.",
       url,
       type: "article",
-      images: post.cover_image ? [post.cover_image] : ["/og.png"],
+      images: post.cover_image ? [post.cover_image] : ["/blog-default.svg"],
     },
     alternates: {
       canonical: url,
@@ -189,7 +189,7 @@ export default async function BlogPostPage({
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={post.cover_image || "/og.png"}
+          src={post.cover_image || "/blog-default.svg"}
           alt={post.title}
           className="mb-8 w-full rounded-xl object-contain"
         />

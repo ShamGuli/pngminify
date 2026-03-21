@@ -248,27 +248,22 @@ export default async function Home() {
               A growing suite of minify tools for every format.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-3">
             {[
-              {
-                name: "miniwebp.com",
-                href: "https://miniwebp.com",
-                desc: "Compress WEBP images for ultra-light web assets.",
-              },
-              {
-                name: "miniheic.com",
-                href: "https://miniheic.com",
-                desc: "Convert and compress HEIC photos from iOS devices.",
-              },
-              {
-                name: "mp3mini.com",
-                href: "https://mp3mini.com",
-                desc: "Reduce MP3 file size for podcasts and audio files.",
-              },
               {
                 name: "pdfminify.com",
                 href: "https://pdfminify.com",
-                desc: "Shrink large PDF documents for faster sharing.",
+                desc: "Compress and optimize PDF documents for faster sharing.",
+              },
+              {
+                name: "devtoolhere.com",
+                href: "https://devtoolhere.com",
+                desc: "Free online developer tools for encoding, formatting, and more.",
+              },
+              {
+                name: "pdfalone.com",
+                href: "https://pdfalone.com",
+                desc: "All-in-one PDF toolkit — merge, split, convert, and compress.",
               },
             ].map((tool) => (
               <a

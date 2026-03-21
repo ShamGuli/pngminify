@@ -26,7 +26,7 @@ async function getLatestPosts(): Promise<BlogPost[]> {
           apikey: supabaseKey,
           Authorization: `Bearer ${supabaseKey}`,
         },
-        next: { revalidate: 300 },
+        next: { revalidate: 60 },
       },
     );
 

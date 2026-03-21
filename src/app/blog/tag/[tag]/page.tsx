@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -72,12 +73,15 @@ export default async function TagPage({ params }: { params: Params }) {
                 href={`/blog/${post.slug}`}
                 className="flex flex-col overflow-hidden rounded-xl bg-white text-sm text-slate-700 shadow-sm shadow-slate-100 transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={post.cover_image || "/og.png"}
-                  alt={post.title}
-                  className="aspect-video w-full object-cover"
-                />
+                {post.cover_image && (
+                  <Image
+                    src={post.cover_image}
+                    alt={post.title}
+                    width={400}
+                    height={144}
+                    className="h-36 w-full object-cover"
+                  />
+                )}
                 <div className="flex flex-1 flex-col p-4">
                   <h2 className="mb-1 line-clamp-2 text-sm font-semibold text-slate-900">
                     {post.title}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Compressor from "@/components/Compressor";
@@ -318,13 +319,15 @@ export default async function Home() {
                   href={`/blog/${post.slug}`}
                   className="flex flex-col overflow-hidden rounded-xl bg-white text-sm text-slate-700 shadow-sm shadow-slate-100 transition hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={post.cover_image || "/og.png"}
-                    alt={post.title}
-                    className="aspect-video w-full object-cover"
-                    loading="lazy"
-                  />
+                  {post.cover_image && (
+                    <Image
+                      src={post.cover_image}
+                      alt={post.title}
+                      width={400}
+                      height={144}
+                      className="h-36 w-full object-cover"
+                    />
+                  )}
                   <div className="flex flex-1 flex-col justify-between p-4">
                     <div>
                       <h3 className="mb-1 line-clamp-2 text-sm font-semibold text-slate-900">
